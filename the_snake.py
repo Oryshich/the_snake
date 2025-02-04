@@ -1,6 +1,6 @@
 """Питон из спринта №3"""
-import pygame
 from random import randint
+import pygame
 
 
 # Константы для размеров поля и сетки:
