@@ -1,4 +1,4 @@
-'''Питон из спринта №3'''
+"""Питон из спринта №3"""
 import pygame
 from random import randint
 
@@ -30,7 +30,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED = 7  # 20
+SPEED = 20
 
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -44,42 +44,44 @@ clock = pygame.time.Clock()
 
 # Тут опишите все классы игры.
 class GameObject():
-    '''Базовый класс'''
+    """Базовый класс"""
+
     def __init__(self, body_color=APPLE_COLOR):
         self.position = None
         self.body_color = body_color
 
     def draw():
-        '''Метод отрисовки (должен быть реализован в потомках)'''
+        """Метод отрисовки (должен быть реализован в потомках)"""
         pass
 
 
 class Apple(GameObject):
-    '''Приз'''
+    """Приз"""
 
     def __init__(self, prohibition_positions=None):
         super().__init__(APPLE_COLOR)
         self.position = self.randomize_position(prohibition_positions)
 
     def randomize_position(self, prohibition_positions=None):
-        '''Случайное расположение'''
-        position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE, 
+        """Случайное расположение"""
+        position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                     randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
-        if prohibition_positions is not None:            
-            while position in prohibition_positions:                    
-                position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE, 
+        if prohibition_positions is not None:
+            while position in prohibition_positions:
+                position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                             randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
         return position
 
     def draw(self):
-        '''Отрисовка яблока'''
+        """Отрисовка яблока"""
         rect = pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, self.body_color, rect)
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
-    
+
 
 class Snake(GameObject):
-    '''Питон'''
+    """Питон"""
+
     def __init__(self):
         super().__init__(SNAKE_COLOR)
         self.positions = []
@@ -89,7 +91,7 @@ class Snake(GameObject):
         self.last = None
 
     def draw(self):
-        '''Отрисовка питона'''
+        """Отрисовка питона"""
         for position in self.positions[:-1]:
             rect = (pygame.Rect(position, (GRID_SIZE, GRID_SIZE)))
             pygame.draw.rect(screen, self.body_color, rect)
@@ -106,43 +108,45 @@ class Snake(GameObject):
             pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
     def update_direction(self):
-        '''Смена направления движения'''
+        """Смена направления движения"""
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
-    
+
     def move(self):
-        '''Отработка движения питона'''
-        new_item = (self.positions[0][0] + GRID_SIZE * self.direction[0], 
+        """Отработка движения питона"""
+        new_item = (self.positions[0][0] + GRID_SIZE * self.direction[0],
                     self.positions[0][1] + GRID_SIZE * self.direction[1])
         self.positions.insert(0, new_item)
         if self.positions[0][0] == SCREEN_WIDTH:
             self.positions[0] = (0, self.positions[0][1])
         if self.positions[0][0] < 0:
-            self.positions[0] = (SCREEN_WIDTH - GRID_SIZE, self.positions[0][1]) 
+            self.positions[0] = (SCREEN_WIDTH - GRID_SIZE,
+                                 self.positions[0][1])
         if self.positions[0][1] == SCREEN_HEIGHT:
             self.positions[0] = (self.positions[0][0], 0)
         if self.positions[0][1] < 0:
-            self.positions[0] = (self.positions[0][0], SCREEN_HEIGHT - GRID_SIZE)
+            self.positions[0] = (self.positions[0][0],
+                                 SCREEN_HEIGHT - GRID_SIZE)
         self.last = self.positions[-1]
         self.positions.pop()
-    
+
     def get_head_position(self):
-        '''Позиция головы питона'''
+        """Позиция головы питона"""
         return self.positions[0]
-    
+
     def get_length(self):
-        '''Длина питона'''
+        """Длина питона"""
         return len(self.positions)
-    
+
     def reset(self):
-        '''Перезапуск питона'''
+        """Перезапуск питона"""
         self.positions = []
         self.positions.append(CENTER)
 
-   
+
 def handle_keys(game_object):
-    '''Обработка нажатия клавиш'''
+    """Обработка нажатия клавиш"""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -161,7 +165,7 @@ def handle_keys(game_object):
 
 
 def main():
-    '''Основной цикл игры'''
+    """Основной цикл игры"""
     # Инициализация PyGame:
     pygame.init()
     snake = Snake()
@@ -172,21 +176,20 @@ def main():
         clock.tick(SPEED)
         handle_keys(snake)
         snake.update_direction()
-        snake.move()        
+        snake.move()
         if (snake.positions[0] == apple.position):
             snake.positions.append(snake.positions[-1])
             apple.position = apple.randomize_position(snake.positions)
             apple.draw()
         if snake.positions[0] in snake.positions[3:]:
             # Нельзя пересекать свое тело
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, (0, 0, 
+            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, (0, 0,
                              SCREEN_WIDTH, SCREEN_HEIGHT))
             snake.reset()
         snake.draw()
         apple.draw()
-        print(f'Длина: {snake.get_length()}')
         pygame.display.update()
- 
+
 
 if __name__ == '__main__':
     main()
