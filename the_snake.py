@@ -1,4 +1,4 @@
-"""Питон из спринта №3."""
+"""Питон из спринта №3. (ver 1.1)"""
 from random import randint
 
 import pygame
