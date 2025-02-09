@@ -17,7 +17,7 @@ LEFT = (-1, 0)
 RIGHT = (1, 0)
 
 
-CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+START_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 BLACK_COLOR = (0, 0, 0)
 GRAY_COLOR = (93, 216, 228)
@@ -48,7 +48,8 @@ clock = pg.time.Clock()
 class GameObject:
     """Базовый класс."""
 
-    def __init__(self, body_color=BLACK_COLOR, position=None):
+    def __init__(self, body_color=BOARD_BACKGROUND_COLOR,
+                 position=START_POSITION):
         self.position = position
         self.body_color = body_color
 
@@ -57,7 +58,7 @@ class GameObject:
         raise NotImplementedError(f'class method {self.__class__.__name__}.'
                                   'draw() must be redefined')
 
-    def draw_rect(self, position=CENTER):
+    def draw_rect(self, position=START_POSITION):
         """Отрисовка одной ячейки с тенью"""
         rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, self.body_color, rect)
@@ -73,32 +74,31 @@ class Apple(GameObject):
 
     def randomize_position(self, prohibition_positions=None):
         """Случайное расположение."""
-        position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-                    randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
-        if prohibition_positions is not None:
-            while position in prohibition_positions:
-                position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-                            randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
-        self.position = position
+        self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+                         randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
+        while (prohibition_positions is not None and self.position in
+               prohibition_positions):
+            self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+                             randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
 
     def draw(self):
         """Отрисовка яблока."""
-        super().draw_rect(position=self.position)
+        self.draw_rect(position=self.position)
 
 
 class Snake(GameObject):
     """Питон."""
 
     def __init__(self, snake_color=SNAKE_COLOR):
-        super().__init__(body_color=snake_color)
-        self.positions = [CENTER]
+        super().__init__(body_color=snake_color, position=START_POSITION)
+        self.positions = [self.position]
         self.direction = RIGHT
         self.last = None
 
     def draw(self):
         """Отрисовка питона."""
         # Отрисовка головы змейки
-        super().draw_rect(position=self.positions[0])
+        self.draw_rect(position=self.get_head_position)
 
         # Затирание последнего сегмента
         if self.last:
@@ -126,13 +126,16 @@ class Snake(GameObject):
         """Позиция головы питона."""
         return self.positions[0]
 
+    @property
     def get_length(self):
         """Длина питона."""
         return len(self.positions)
 
     def reset(self):
         """Перезапуск питона."""
-        self.positions = [CENTER]
+        self.positions = [self.position]
+        self.direction = RIGHT
+        self.last = None
 
     def increase_length(self):
         """Удлинение питона"""
@@ -163,21 +166,18 @@ def handle_keys(game_object):
 def main():
     """Основной цикл игры."""
     pg.init()
-    snake = Snake(snake_color=SNAKE_COLOR)
-    apple = Apple(apple_color=APPLE_COLOR,
-                  prohibition_positions=snake.positions)
+    snake = Snake()
+    apple = Apple(prohibition_positions=snake.positions)
 
     apple.draw()
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
-        snake.update_direction()
         snake.move()
         if (snake.get_head_position == apple.position):
             snake.increase_length()
             apple.randomize_position(prohibition_positions=snake.positions)
-            apple.draw()
-        if snake.get_head_position in snake.positions[4:]:
+        elif snake.get_head_position in snake.positions[4:]:
             # Нельзя пересекать свое тело
             screen.fill(BOARD_BACKGROUND_COLOR)
             snake.reset()
